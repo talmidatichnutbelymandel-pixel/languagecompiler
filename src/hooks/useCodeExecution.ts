@@ -1,9 +1,17 @@
 import { useState, useCallback } from 'react';
-import { LANGUAGE_CONFIG, ExecutionResult } from '@/types/ide';
+import { LANGUAGE_CONFIG } from '@/types/ide';
 
-const JUDGE0_API = 'https://judge0-ce.p.rapidapi.com';
+const PISTON_API = 'https://emkc.org/api/v2/piston';
 
-export function useCodeExecution(apiKey: string) {
+const PISTON_LANGUAGE_MAP: Record<string, { language: string; version: string }> = {
+  python: { language: 'python', version: '3.10.0' },
+  javascript: { language: 'javascript', version: '18.15.0' },
+  typescript: { language: 'typescript', version: '5.0.3' },
+  java: { language: 'java', version: '15.0.2' },
+  csharp: { language: 'csharp', version: '6.12.0' },
+};
+
+export function useCodeExecution() {
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState<string>('');
 
@@ -14,8 +22,9 @@ export function useCodeExecution(apiKey: string) {
       return;
     }
 
-    if (!apiKey) {
-      setOutput('⚠️ Please set your Judge0 API key (RapidAPI) in Settings to run code.');
+    const pistonLang = PISTON_LANGUAGE_MAP[language];
+    if (!pistonLang) {
+      setOutput('⚠️ This language is not supported for execution.');
       return;
     }
 
@@ -23,72 +32,46 @@ export function useCodeExecution(apiKey: string) {
     setOutput('⏳ Running...');
 
     try {
-      const submitRes = await fetch(`${JUDGE0_API}/submissions?base64_encoded=true&wait=false`, {
+      const res = await fetch(`${PISTON_API}/execute`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-RapidAPI-Key': apiKey,
-          'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          language_id: config.id,
-          source_code: btoa(unescape(encodeURIComponent(code))),
-          stdin: btoa(unescape(encodeURIComponent(stdin))),
+          language: pistonLang.language,
+          version: pistonLang.version,
+          files: [{ content: code }],
+          stdin,
         }),
       });
 
-      if (!submitRes.ok) {
-        const errText = await submitRes.text();
-        throw new Error(`Submit failed (${submitRes.status}): ${errText}`);
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Execution failed (${res.status}): ${errText}`);
       }
 
-      const { token } = await submitRes.json();
-
-      let result: ExecutionResult | null = null;
-      for (let i = 0; i < 20; i++) {
-        await new Promise(r => setTimeout(r, 1500));
-        const pollRes = await fetch(`${JUDGE0_API}/submissions/${token}?base64_encoded=true`, {
-          headers: {
-            'X-RapidAPI-Key': apiKey,
-            'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-          },
-        });
-        const data = await pollRes.json();
-        if (data.status?.id >= 3) {
-          result = data;
-          break;
-        }
-      }
-
-      if (!result) {
-        setOutput('⏰ Execution timed out.');
-        return;
-      }
-
-      const decode = (s: string | null) => s ? decodeURIComponent(escape(atob(s))) : '';
-      const stdout = decode(result.stdout as unknown as string);
-      const stderr = decode(result.stderr as unknown as string);
-      const compileOut = decode(result.compile_output as unknown as string);
+      const data = await res.json();
+      const run = data.run;
 
       let outputText = '';
-      if (result.status.id === 3) {
-        outputText = `✅ ${result.status.description}\n`;
-        if (stdout) outputText += `\n${stdout}`;
-        if (result.time) outputText += `\n⏱️ Time: ${result.time}s`;
-        if (result.memory) outputText += ` | 💾 Memory: ${Math.round(result.memory / 1024)}KB`;
+      if (run.code === 0) {
+        outputText = `✅ Executed successfully\n`;
+        if (run.stdout) outputText += `\n${run.stdout}`;
       } else {
-        outputText = `❌ ${result.status.description}\n`;
-        if (compileOut) outputText += `\n${compileOut}`;
-        if (stderr) outputText += `\n${stderr}`;
+        outputText = `❌ Exit code: ${run.code}\n`;
+        if (run.stdout) outputText += `\n${run.stdout}`;
+        if (run.stderr) outputText += `\n${run.stderr}`;
+      }
+
+      if (data.compile && data.compile.stderr) {
+        outputText = `❌ Compilation error\n\n${data.compile.stderr}`;
       }
 
       setOutput(outputText);
     } catch (err) {
-      setOutput(`❌ Error: ${err instanceof Error ? err.message : 'Unknown error'}\n\nThis may be due to network restrictions. Check your API key and network access.`);
+      setOutput(`❌ Error: ${err instanceof Error ? err.message : 'Unknown error'}\n\nThis may be due to network restrictions.`);
     } finally {
       setIsRunning(false);
     }
-  }, [apiKey]);
+  }, []);
 
   const clearOutput = useCallback(() => setOutput(''), []);
 
