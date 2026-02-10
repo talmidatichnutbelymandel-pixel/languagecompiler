@@ -8,19 +8,8 @@ import EditorTabs from './EditorTabs';
 import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
 import PreviewPanel from './PreviewPanel';
-import { Settings, Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-const API_KEY_STORAGE = 'codecloud-judge0-key';
 
 export default function IDELayout() {
   const {
@@ -30,11 +19,9 @@ export default function IDELayout() {
   } = useFileSystem();
 
   const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark');
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem(API_KEY_STORAGE) || '');
-  const [showSettings, setShowSettings] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  const { isRunning, output, executeCode, clearOutput } = useCodeExecution(apiKey);
+  const { isRunning, output, executeCode, clearOutput } = useCodeExecution();
 
   const activeFile = activeFileId ? findNode(activeFileId) : null;
   const activeContent = activeFileId ? getFileContent(activeFileId) : '';
@@ -67,11 +54,6 @@ export default function IDELayout() {
     return () => window.removeEventListener('keydown', handler);
   }, [handleRun]);
 
-  const saveApiKey = (key: string) => {
-    setApiKey(key);
-    localStorage.setItem(API_KEY_STORAGE, key);
-  };
-
   const isDark = theme === 'vs-dark';
 
   return (
@@ -98,14 +80,6 @@ export default function IDELayout() {
             onClick={() => setTheme(isDark ? 'light' : 'vs-dark')}
           >
             {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setShowSettings(true)}
-          >
-            <Settings className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -187,34 +161,6 @@ export default function IDELayout() {
         </ResizablePanelGroup>
       </div>
 
-      {/* Settings Dialog */}
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-            <DialogDescription>Configure your CodeCloud IDE</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="api-key">Judge0 API Key (RapidAPI)</Label>
-              <Input
-                id="api-key"
-                type="password"
-                value={apiKey}
-                onChange={e => saveApiKey(e.target.value)}
-                placeholder="Enter your RapidAPI key for Judge0..."
-                className="mt-1"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Get a free key at{' '}
-                <a href="https://rapidapi.com/judge0-official/api/judge0-ce" target="_blank" rel="noreferrer" className="underline text-primary">
-                  rapidapi.com/judge0
-                </a>
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
