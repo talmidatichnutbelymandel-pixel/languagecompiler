@@ -1,4 +1,6 @@
-import Editor from '@monaco-editor/react';
+import { useRef } from 'react';
+import Editor, { OnMount } from '@monaco-editor/react';
+import { registerCompletionProviders } from '@/lib/monacoCompletions';
 
 interface CodeEditorProps {
   value: string;
@@ -7,7 +9,16 @@ interface CodeEditorProps {
   onChange: (value: string) => void;
 }
 
+const registeredRef = { current: false };
+
 export default function CodeEditor({ value, language, theme, onChange }: CodeEditorProps) {
+  const handleMount: OnMount = (_editor, monaco) => {
+    if (!registeredRef.current) {
+      registerCompletionProviders(monaco);
+      registeredRef.current = true;
+    }
+  };
+
   return (
     <Editor
       height="100%"
@@ -15,6 +26,7 @@ export default function CodeEditor({ value, language, theme, onChange }: CodeEdi
       value={value}
       theme={theme}
       onChange={v => onChange(v ?? '')}
+      onMount={handleMount}
       options={{
         fontSize: 14,
         fontFamily: "'Fira Code', 'Cascadia Code', Consolas, monospace",
