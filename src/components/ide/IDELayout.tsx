@@ -14,12 +14,7 @@ import { Button } from '@/components/ui/button';
 import TerminalPanel from './TerminalPanel';
 import { PROJECT_TEMPLATES } from '@/lib/projectTemplates';
 import { FileNode } from '@/types/ide';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 export default function IDELayout() {
   const {
     files,
@@ -34,7 +29,7 @@ export default function IDELayout() {
     deleteNode,
     renameNode,
     findNode,
-    addProjectTree,
+    addProjectTree
   } = useFileSystem();
   const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark');
   const [showPreview, setShowPreview] = useState(false);
@@ -58,7 +53,6 @@ export default function IDELayout() {
   useEffect(() => {
     if (isHtml) setShowPreview(true);
   }, [isHtml]);
-
   const handleCreateProject = useCallback((projectNode: FileNode) => {
     addProjectTree(projectNode, rootFolderId);
     setShowPreview(true);
@@ -90,7 +84,7 @@ export default function IDELayout() {
           <Monitor className="h-4 w-4 text-primary" />
           <span className="text-sm font-bold tracking-tight text-primary-foreground">CodeCloud IDE</span>
         </div>
-        <div className="flex items-center gap-1 text-primary-foreground">
+        <div className="flex items-center gap-1 text-primary">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7" title="New Project">
@@ -98,11 +92,9 @@ export default function IDELayout() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {PROJECT_TEMPLATES.map(t => (
-                <DropdownMenuItem key={t.framework} onClick={() => handleCreateProject(t.create(t.framework + '-app'))}>
+              {PROJECT_TEMPLATES.map(t => <DropdownMenuItem key={t.framework} onClick={() => handleCreateProject(t.create(t.framework + '-app'))}>
                   📦 {t.name}
-                </DropdownMenuItem>
-              ))}
+                </DropdownMenuItem>)}
             </DropdownMenuContent>
           </DropdownMenu>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={openFilePicker} title="Open File">
@@ -156,11 +148,7 @@ export default function IDELayout() {
 
               {/* Output / Terminal */}
               <ResizablePanel defaultSize={35} minSize={15}>
-                {showTerminal ? (
-                  <TerminalPanel onCreateProject={handleCreateProject} onOpenFile={openFile} />
-                ) : (
-                  <OutputPanel output={output} isRunning={isRunning} onRun={handleRun} onClear={clearOutput} canRun={canRun} />
-                )}
+                {showTerminal ? <TerminalPanel onCreateProject={handleCreateProject} onOpenFile={openFile} /> : <OutputPanel output={output} isRunning={isRunning} onRun={handleRun} onClear={clearOutput} canRun={canRun} />}
               </ResizablePanel>
             </ResizablePanelGroup>
           </ResizablePanel>
