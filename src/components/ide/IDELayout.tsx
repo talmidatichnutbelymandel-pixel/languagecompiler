@@ -8,7 +8,8 @@ import EditorTabs from './EditorTabs';
 import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
 import PreviewPanel from './PreviewPanel';
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun, Monitor, FolderOpen, FileUp } from 'lucide-react';
+import { useLocalFileImport } from '@/hooks/useLocalFileImport';
 import { Button } from '@/components/ui/button';
 
 export default function IDELayout() {
@@ -20,6 +21,9 @@ export default function IDELayout() {
 
   const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark');
   const [showPreview, setShowPreview] = useState(false);
+
+  const rootFolderId = files[0]?.id || null;
+  const { openFilePicker, openFolderPicker } = useLocalFileImport(createFile, updateFileContent, openFile, rootFolderId);
 
   const { isRunning, output, executeCode, clearOutput } = useCodeExecution();
 
@@ -65,6 +69,24 @@ export default function IDELayout() {
           <span className="text-sm font-bold tracking-tight">CodeCloud IDE</span>
         </div>
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={openFilePicker}
+            title="Open File"
+          >
+            <FileUp className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={openFolderPicker}
+            title="Open Folder"
+          >
+            <FolderOpen className="h-3.5 w-3.5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
