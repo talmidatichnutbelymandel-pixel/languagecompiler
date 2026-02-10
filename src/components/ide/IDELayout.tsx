@@ -70,7 +70,7 @@ export default function IDELayout() {
   return <div className={`h-screen w-screen flex flex-col overflow-hidden ${isDark ? 'dark' : ''}`}>
       {/* Title bar */}
       <div className="h-10 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4 shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-primary-foreground">
           <Monitor className="h-4 w-4 text-primary" />
           <span className="text-sm font-bold tracking-tight text-primary-foreground">CodeCloud IDE</span>
         </div>
