@@ -8,9 +8,18 @@ import EditorTabs from './EditorTabs';
 import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
 import PreviewPanel from './PreviewPanel';
-import { Moon, Sun, Monitor, FolderOpen, FileUp } from 'lucide-react';
+import { Moon, Sun, Monitor, FolderOpen, FileUp, Terminal, Plus } from 'lucide-react';
 import { useLocalFileImport } from '@/hooks/useLocalFileImport';
 import { Button } from '@/components/ui/button';
+import TerminalPanel from './TerminalPanel';
+import { PROJECT_TEMPLATES } from '@/lib/projectTemplates';
+import { FileNode } from '@/types/ide';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 export default function IDELayout() {
   const {
     files,
@@ -24,10 +33,12 @@ export default function IDELayout() {
     createFile,
     deleteNode,
     renameNode,
-    findNode
+    findNode,
+    addProjectTree,
   } = useFileSystem();
   const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark');
   const [showPreview, setShowPreview] = useState(false);
+  const [showTerminal, setShowTerminal] = useState(false);
   const rootFolderId = files[0]?.id || null;
   const {
     openFilePicker,
@@ -47,6 +58,11 @@ export default function IDELayout() {
   useEffect(() => {
     if (isHtml) setShowPreview(true);
   }, [isHtml]);
+
+  const handleCreateProject = useCallback((projectNode: FileNode) => {
+    addProjectTree(projectNode, rootFolderId);
+    setShowPreview(true);
+  }, [addProjectTree, rootFolderId]);
   const handleRun = useCallback((stdin: string) => {
     if (activeFile && canRun) {
       executeCode(activeContent, activeLang, stdin);
@@ -75,11 +91,28 @@ export default function IDELayout() {
           <span className="text-sm font-bold tracking-tight text-primary-foreground">CodeCloud IDE</span>
         </div>
         <div className="flex items-center gap-1 text-primary-foreground">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7" title="New Project">
+                <Plus className="h-3.5 w-3.5 text-primary" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {PROJECT_TEMPLATES.map(t => (
+                <DropdownMenuItem key={t.framework} onClick={() => handleCreateProject(t.create(t.framework + '-app'))}>
+                  📦 {t.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={openFilePicker} title="Open File">
             <FileUp className="h-3.5 w-3.5 text-primary" />
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={openFolderPicker} title="Open Folder">
             <FolderOpen className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowTerminal(!showTerminal)} title="Terminal">
+            <Terminal className="h-3.5 w-3.5 text-primary" />
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowPreview(!showPreview)}>
             <Monitor className="h-3.5 w-3.5 text-primary" />
@@ -121,9 +154,13 @@ export default function IDELayout() {
 
               <ResizableHandle withHandle />
 
-              {/* Output */}
+              {/* Output / Terminal */}
               <ResizablePanel defaultSize={35} minSize={15}>
-                <OutputPanel output={output} isRunning={isRunning} onRun={handleRun} onClear={clearOutput} canRun={canRun} />
+                {showTerminal ? (
+                  <TerminalPanel onCreateProject={handleCreateProject} onOpenFile={openFile} />
+                ) : (
+                  <OutputPanel output={output} isRunning={isRunning} onRun={handleRun} onClear={clearOutput} canRun={canRun} />
+                )}
               </ResizablePanel>
             </ResizablePanelGroup>
           </ResizablePanel>

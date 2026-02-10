@@ -164,6 +164,25 @@ export function useFileSystem() {
     setOpenTabs(prev => prev.map(t => t.fileId === nodeId ? { ...t, name: newName, language: getLanguageFromFilename(newName) } : t));
   }, []);
 
+  const addProjectTree = useCallback((projectNode: FileNode, parentId: string | null) => {
+    setFiles(prev => {
+      if (!parentId) return [...prev, projectNode];
+      const addChild = (nodes: FileNode[]): FileNode[] =>
+        nodes.map(n => {
+          if (n.id === parentId && n.type === 'folder') return { ...n, children: [...(n.children || []), projectNode] };
+          if (n.children) return { ...n, children: addChild(n.children) };
+          return n;
+        });
+      return addChild(prev);
+    });
+    // Open the first file (index.html usually)
+    const firstFile = projectNode.children?.find(c => c.type === 'file' && c.name === 'index.html') 
+      || projectNode.children?.find(c => c.type === 'file');
+    if (firstFile) {
+      setTimeout(() => openFile(firstFile.id), 100);
+    }
+  }, [openFile]);
+
   return {
     files,
     openTabs,
@@ -177,5 +196,6 @@ export function useFileSystem() {
     deleteNode,
     renameNode,
     findNode: (id: string) => findNode(files, id),
+    addProjectTree,
   };
 }
