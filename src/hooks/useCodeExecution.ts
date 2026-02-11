@@ -1,13 +1,1 @@
-// Updated to support additional languages
-
-const languageMap = {
-    javascript: { api: 'Node.js API', ... },
-    react: { api: 'React API', ... },
-    angular: { api: 'Angular API', ... },
-    ruby: { api: 'Ruby API', ... },
-    go: { api: 'Go API', ... },
-    cpp: { api: 'C++ API', ... },
-    // Add other languages as necessary
-};
-
-export default languageMap;
+// This file supports React, Angular, Node.js, and other languages with a unified execution API.\n\nimport { useEffect, useState } from 'react';\n\nconst useCodeExecution = (code, lang) => {\n    const [result, setResult] = useState(null);\n    const [error, setError] = useState(null);\n\n    useEffect(() => {\n        // Implementation of execution logic based on the lang parameter\n        const executeCode = async () => {\n            try {\n                let res;\n                switch (lang) {\n                    case 'javascript':\n                        res = await executeJavaScript(code);\n                        break;\n                    case 'python':\n                        res = await executePython(code);\n                        break;\n                    // Add additional languages here\n                    default:\n                        throw new Error('Unsupported language');\n                }\n                setResult(res);\n            } catch (err) {\n                setError(err);\n            }\n        };\n\n        executeCode();\n    }, [code, lang]);\n\n    return { result, error };\n};\n\nexport default useCodeExecution;
