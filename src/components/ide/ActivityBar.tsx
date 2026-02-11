@@ -1,7 +1,7 @@
 import { Files, Search, GitBranch, Play, Settings, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type ActivityView = 'explorer' | 'search' | 'git' | 'run' | 'extensions';
+export type ActivityView = 'explorer' | 'search' | 'git' | 'run' | 'extensions' | 'settings';
 
 interface ActivityBarProps {
   activeView: ActivityView;
