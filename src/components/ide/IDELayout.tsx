@@ -82,7 +82,7 @@ export default function IDELayout() {
       <div className="h-10 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-2 text-primary-foreground">
           <Monitor className="h-4 w-4 text-primary" />
-          <span className="text-sm font-bold tracking-tight text-primary-foreground">CodeCloud IDE</span>
+          <span className="text-sm font-bold tracking-tight text-primary-foreground">Language Compailer</span>
         </div>
         <div className="flex items-center gap-1 text-primary">
           <DropdownMenu>
